@@ -4,15 +4,18 @@ import helmet from "helmet";
 import cors from "cors";
 import logger from "./config/logger";
 import { config } from "./config";
+import { limiter } from "./middlewares/rate-limit.middleware";
+import { proxyServices } from "./config/services";
 
 const app = express();
 
 app.use(helmet());
 app.use(cors());
+app.use(limiter)
 
 //REQUEST LOGGING MIDDLEWARE
 app.use((req: Request, res: Response, next: NextFunction) => {
-  logger.debug(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  logger.debug(`${req.method} ${req.url}`);
   next;
 });
 
@@ -21,6 +24,8 @@ app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "ok" });
 });
 
+//SERVICE ROUTES
+proxyServices(app)
 
 //404 HANDLER
 app.use((req: Request, res: Response) => {
